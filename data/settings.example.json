@@ -1,0 +1,13 @@
+{
+  "name": "Your Name",
+  "specialty": "your photography specialty",
+  "notes": "A bit about your style and approach",
+  "savedResponses": [
+    {
+      "id": "1",
+      "trigger": "rates",
+      "title": "My Rates",
+      "text": "Your rates info here..."
+    }
+  ]
+}

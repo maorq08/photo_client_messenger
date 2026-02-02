@@ -1,0 +1,208 @@
+.conversation {
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(22, 33, 62, 0.5) 100%);
+}
+
+/* Empty state */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon {
+  font-size: 56px;
+  opacity: 0.8;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.empty-state h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 280px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Message bubbles */
+.message {
+  max-width: 75%;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  position: relative;
+  animation: messageIn 0.3s ease-out;
+}
+
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message.client {
+  align-self: flex-start;
+  background: var(--msg-client);
+  border-bottom-left-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+
+.message.me {
+  align-self: flex-end;
+  background: var(--msg-me);
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+}
+
+/* Message header with sender and time */
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.sender {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.message.client .sender {
+  color: var(--accent);
+}
+
+.message.me .sender {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-btn {
+  opacity: 0;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.message:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: var(--bg-hover);
+}
+
+.copy-btn.copied {
+  opacity: 1;
+  color: var(--success, #22c55e);
+}
+
+.time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.message.me .time {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.message.me .copy-btn {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.message.me .copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.message.me .copy-btn.copied {
+  color: var(--success, #22c55e);
+}
+
+/* Message content */
+.message-text {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 15px;
+}
+
+.message.client .message-text {
+  color: var(--text-primary);
+}
+
+.message.me .message-text {
+  color: white;
+}
+
+/* Hover effects */
+.message {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message:hover {
+  transform: translateY(-1px);
+}
+
+.message.client:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.message.me:hover {
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .conversation {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .message {
+    max-width: 88%;
+    padding: 12px 16px;
+  }
+
+  .message-text {
+    font-size: 14px;
+  }
+}

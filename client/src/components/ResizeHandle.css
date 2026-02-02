@@ -1,0 +1,127 @@
+/* Resize Handle Base */
+.resize-handle {
+  position: relative;
+  background: transparent;
+  z-index: 10;
+  user-select: none;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+/* Visible line */
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  background: var(--border);
+  transition:
+    background-color 200ms ease,
+    transform 150ms ease,
+    box-shadow 200ms ease;
+}
+
+/* Grip dots indicator */
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 1;
+}
+
+/* Horizontal (col-resize) - between sidebar and main */
+.resize-handle-horizontal {
+  width: 8px;
+  cursor: col-resize;
+}
+
+.resize-handle-horizontal::after {
+  width: 2px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.resize-handle-horizontal::before {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    var(--accent) 3px,
+    var(--accent) 5px
+  );
+}
+
+/* Vertical (row-resize) - between conversation and input */
+.resize-handle-vertical {
+  height: 8px;
+  cursor: row-resize;
+}
+
+.resize-handle-vertical::after {
+  height: 2px;
+  width: 100%;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.resize-handle-vertical::before {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  width: 2px;
+  height: 32px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    var(--accent) 3px,
+    var(--accent) 5px
+  );
+}
+
+/* Hover State */
+.resize-handle:hover::after {
+  background: rgba(108, 99, 255, 0.5);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.3);
+}
+
+.resize-handle-horizontal:hover::after {
+  transform: translateX(-50%) scaleX(1.5);
+}
+
+.resize-handle-vertical:hover::after {
+  transform: translateY(-50%) scaleY(1.5);
+}
+
+.resize-handle:hover::before {
+  opacity: 1;
+}
+
+/* Active/Focus State */
+.resize-handle:active::after,
+.resize-handle:focus-visible::after {
+  background: var(--accent);
+  box-shadow: 0 0 12px rgba(108, 99, 255, 0.5);
+}
+
+.resize-handle:focus-visible {
+  outline: none;
+}
+
+.resize-handle:focus-visible::before {
+  opacity: 1;
+}
+
+/* Mobile: hide resize handles */
+@media (max-width: 768px) {
+  .resize-handle {
+    display: none;
+  }
+}

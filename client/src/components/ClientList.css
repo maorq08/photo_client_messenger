@@ -1,0 +1,139 @@
+.client-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.clients {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.client-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+
+.client-item:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border);
+}
+
+.client-item.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.client-item .client-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.client-item .client-name {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.client-item .client-notes {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.client-item.selected .client-name {
+  color: var(--accent);
+}
+
+.client-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.client-item:hover .client-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  background: transparent;
+  padding: 6px 8px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+}
+
+.action-btn:hover {
+  background: var(--bg-hover);
+}
+
+/* Forms */
+.client-edit-form,
+.add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  margin: 8px 12px;
+  border: 1px solid var(--border);
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.add-btn {
+  margin: 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 14px;
+  border: 1px dashed var(--border-light);
+  font-weight: 500;
+}
+
+.add-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Button variants */
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-light);
+}
