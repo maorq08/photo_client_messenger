@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Settings, SavedResponse } from '../types';
 import { updateSettings, authChangePassword } from '../api';
+import { useTheme } from '../contexts/ThemeContext';
 import './SettingsModal.css';
 
 interface Props {
@@ -17,6 +18,9 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>(settings.savedResponses);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Theme
+  const { theme, setTheme } = useTheme();
 
   // Change password state
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -109,6 +113,27 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
         </div>
 
         <div className="modal-content">
+          <section className="settings-section">
+            <h3>Appearance</h3>
+            <p className="section-hint">Choose your visual theme</p>
+            <div className="theme-toggle">
+              <button
+                type="button"
+                className={`theme-option ${theme === 'classic' ? 'active' : ''}`}
+                onClick={() => setTheme('classic')}
+              >
+                Classic
+              </button>
+              <button
+                type="button"
+                className={`theme-option ${theme === 'pixel-anime' ? 'active' : ''}`}
+                onClick={() => setTheme('pixel-anime')}
+              >
+                Pixel Anime
+              </button>
+            </div>
+          </section>
+
           <section className="settings-section">
             <h3>Your Info</h3>
             <p className="section-hint">AI uses this to write responses that sound like you</p>

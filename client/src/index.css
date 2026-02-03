@@ -4,47 +4,7 @@
   box-sizing: border-box;
 }
 
-:root {
-  /* Modern warm dark theme */
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-tertiary: #1f2b47;
-  --bg-hover: #253352;
-  --bg-card: #1e2a45;
-
-  /* Text colors */
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a8c0;
-  --text-muted: #6b7394;
-
-  /* Accent colors */
-  --accent: #6c63ff;
-  --accent-hover: #5a52e0;
-  --accent-soft: rgba(108, 99, 255, 0.15);
-
-  /* Message colors */
-  --msg-client: #2d3a5a;
-  --msg-me: linear-gradient(135deg, #6c63ff 0%, #4f46e5 100%);
-
-  /* Status colors */
-  --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.15);
-  --warning: #f59e0b;
-  --error: #ef4444;
-
-  /* Borders & shadows */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.12);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
-
-  /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-}
+/* Theme variables are defined in themes.css */
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

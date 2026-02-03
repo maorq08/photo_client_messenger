@@ -1,0 +1,684 @@
+/* === THEME DEFINITIONS === */
+
+/* Classic Theme (Default - current dark theme) */
+:root,
+[data-theme="classic"] {
+  /* Modern warm dark theme */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #1f2b47;
+  --bg-hover: #253352;
+  --bg-card: #1e2a45;
+
+  /* Text colors */
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a8c0;
+  --text-muted: #6b7394;
+
+  /* Accent colors */
+  --accent: #6c63ff;
+  --accent-hover: #5a52e0;
+  --accent-soft: rgba(108, 99, 255, 0.15);
+
+  /* Message colors */
+  --msg-client: #2d3a5a;
+  --msg-me: linear-gradient(135deg, #6c63ff 0%, #4f46e5 100%);
+
+  /* Status colors */
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* Borders & shadows */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.12);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Font */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* === PIXEL ANIME THEME === */
+/* Inspired by Game Boy / retro RPG UI - LIGHT background with dark elements */
+[data-theme="pixel-anime"] {
+  /* Light gray backgrounds - Game Boy style */
+  --bg-primary: #D8D8D8;
+  --bg-secondary: #E8E8E8;
+  --bg-tertiary: #F0F0F0;
+  --bg-hover: #C8C8C8;
+  --bg-card: #E8E8E8;
+
+  /* Dark text for contrast */
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-muted: #6A6A6A;
+
+  /* Black accents */
+  --accent: #1A1A1A;
+  --accent-hover: #3A3A3A;
+  --accent-soft: rgba(0, 0, 0, 0.1);
+
+  /* Message colors */
+  --msg-client: #F8F8F8;
+  --msg-me: #1A1A1A;
+
+  /* Status colors */
+  --success: #1A1A1A;
+  --success-soft: rgba(0, 0, 0, 0.1);
+  --warning: #4A4A4A;
+  --error: #1A1A1A;
+
+  /* Chunky pixel borders & retro shadows */
+  --border: #1A1A1A;
+  --border-light: #FFFFFF;
+  --shadow-sm: 3px 3px 0 #1A1A1A;
+  --shadow-md: 4px 4px 0 #1A1A1A;
+  --shadow-lg: 6px 6px 0 #1A1A1A;
+  --shadow-inset: inset -2px -2px 0 #AAAAAA, inset 2px 2px 0 #FFFFFF;
+
+  /* NO border radius - pixel perfect */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  /* Pixel font - chunky and fun */
+  --font-family: 'VT323', 'Press Start 2P', 'JetBrains Mono', 'Courier New', monospace;
+  --font-size-boost: 1.1;
+}
+
+/* === PIXEL ANIME SPECIFIC STYLES === */
+
+/* Import pixel font */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* Force sharp corners everywhere */
+[data-theme="pixel-anime"] *,
+[data-theme="pixel-anime"] *::before,
+[data-theme="pixel-anime"] *::after {
+  border-radius: 0 !important;
+}
+
+/* Body and typography */
+[data-theme="pixel-anime"] body {
+  font-family: var(--font-family);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  image-rendering: pixelated;
+}
+
+/* RPG-style beveled buttons */
+[data-theme="pixel-anime"] button {
+  border: 3px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  font-size: 16px;
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+[data-theme="pixel-anime"] button:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    5px 5px 0 var(--border),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+  background: var(--bg-tertiary);
+}
+
+[data-theme="pixel-anime"] button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset 2px 2px 0 #888888,
+    inset -2px -2px 0 #FFFFFF;
+  background: var(--bg-hover);
+}
+
+/* Primary buttons - dark with light text (inverted) */
+[data-theme="pixel-anime"] .btn-primary,
+[data-theme="pixel-anime"] .submit-btn {
+  background: var(--text-primary);
+  color: var(--bg-secondary);
+  border-color: var(--border);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .btn-primary:hover:not(:disabled),
+[data-theme="pixel-anime"] .submit-btn:hover:not(:disabled) {
+  background: #3A3A3A;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--border);
+}
+
+[data-theme="pixel-anime"] .btn-primary:active:not(:disabled),
+[data-theme="pixel-anime"] .submit-btn:active:not(:disabled) {
+  background: #0A0A0A;
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Pixel-style inputs - inset look */
+[data-theme="pixel-anime"] input,
+[data-theme="pixel-anime"] textarea {
+  border: 3px solid var(--border);
+  background: #FFFFFF;
+  color: var(--text-primary);
+  box-shadow:
+    inset 3px 3px 0 #CCCCCC,
+    inset -1px -1px 0 #FFFFFF;
+  font-size: 16px;
+}
+
+[data-theme="pixel-anime"] input::placeholder,
+[data-theme="pixel-anime"] textarea::placeholder {
+  color: #888888;
+}
+
+[data-theme="pixel-anime"] input:focus,
+[data-theme="pixel-anime"] textarea:focus {
+  border-color: var(--text-primary);
+  outline: 3px solid var(--bg-hover);
+  outline-offset: 0;
+}
+
+/* Cards and modals - RPG dialog box style */
+[data-theme="pixel-anime"] .modal,
+[data-theme="pixel-anime"] .login-card {
+  border: 4px solid var(--text-primary);
+  box-shadow:
+    var(--shadow-lg),
+    inset -3px -3px 0 #AAAAAA,
+    inset 3px 3px 0 #FFFFFF;
+  position: relative;
+  background: var(--bg-secondary);
+}
+
+/* Corner decorations */
+[data-theme="pixel-anime"] .modal::before,
+[data-theme="pixel-anime"] .login-card::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--text-primary);
+  border-left: 2px solid var(--text-primary);
+  pointer-events: none;
+}
+
+[data-theme="pixel-anime"] .modal::after,
+[data-theme="pixel-anime"] .login-card::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--text-primary);
+  border-right: 2px solid var(--text-primary);
+  pointer-events: none;
+}
+
+/* Modal header - RPG title bar style */
+[data-theme="pixel-anime"] .modal-header {
+  background: linear-gradient(180deg, #4A4A4A 0%, #2A2A2A 100%);
+  color: #FFFFFF;
+  border-bottom: 3px solid var(--text-primary);
+  box-shadow: inset 0 2px 0 #6A6A6A;
+}
+
+[data-theme="pixel-anime"] .modal-header h2 {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #FFFFFF;
+  background-clip: unset;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 18px;
+  text-shadow: 2px 2px 0 #000000;
+}
+
+[data-theme="pixel-anime"] .close-btn {
+  background: #E8E8E8;
+  color: var(--text-primary);
+  border: 3px solid var(--border);
+  box-shadow:
+    2px 2px 0 var(--border),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .close-btn:hover {
+  transform: none;
+  background: #CCCCCC;
+}
+
+/* Sidebar - game menu style */
+[data-theme="pixel-anime"] .sidebar {
+  border-right: 4px solid var(--border);
+  box-shadow: inset -3px 0 0 #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .sidebar-header {
+  border-bottom: 3px solid var(--border);
+  background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+}
+
+[data-theme="pixel-anime"] .sidebar-header h1 {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: var(--text-primary);
+  background-clip: unset;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 22px;
+  text-shadow: 2px 2px 0 #FFFFFF, -1px -1px 0 #888888;
+}
+
+/* Client list items - menu selection style */
+[data-theme="pixel-anime"] .client-item {
+  border: 3px solid var(--border);
+  margin-bottom: 6px;
+  background: var(--bg-tertiary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+  transition: all 0.05s ease;
+}
+
+[data-theme="pixel-anime"] .client-item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    5px 5px 0 var(--border),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .client-item.active {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border-color: var(--text-primary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .client-item.active .client-name {
+  color: #FFFFFF;
+}
+
+/* Message bubbles - RPG dialog box style */
+[data-theme="pixel-anime"] .message-bubble.client {
+  background: #FFFFFF;
+  color: var(--text-primary);
+  border: 3px solid var(--border);
+  box-shadow:
+    4px 4px 0 var(--border),
+    inset -2px -2px 0 #CCCCCC,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .message-bubble.me {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border: 3px solid var(--border);
+  box-shadow:
+    4px 4px 0 var(--border),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+/* Pixel scrollbar - chunky game style */
+[data-theme="pixel-anime"] ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+[data-theme="pixel-anime"] ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border: 3px solid var(--border);
+  box-shadow: inset 2px 2px 0 #AAAAAA;
+}
+
+[data-theme="pixel-anime"] ::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border: 3px solid var(--border);
+  box-shadow:
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-hover);
+}
+
+[data-theme="pixel-anime"] ::-webkit-scrollbar-button {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  height: 16px;
+}
+
+/* Loading spinner - pixel animation */
+[data-theme="pixel-anime"] .loading-spinner {
+  border: none;
+  width: 24px;
+  height: 24px;
+  background: var(--text-primary);
+  animation: pixel-loading 0.8s infinite steps(4);
+}
+
+@keyframes pixel-loading {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal overlay - dithered darkness */
+[data-theme="pixel-anime"] .modal-overlay,
+[data-theme="pixel-anime"] .sidebar-overlay {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.8) 0px,
+      rgba(0, 0, 0, 0.8) 2px,
+      rgba(0, 0, 0, 0.6) 2px,
+      rgba(0, 0, 0, 0.6) 4px
+    );
+}
+
+/* Tone chips - game menu style */
+[data-theme="pixel-anime"] .tone-chip {
+  border: 3px solid var(--border);
+  background: var(--bg-tertiary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .tone-chip:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--border);
+}
+
+[data-theme="pixel-anime"] .tone-chip.active {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border-color: var(--text-primary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+  transform: none;
+}
+
+/* Settings sections */
+[data-theme="pixel-anime"] .settings-section h3::before {
+  background: var(--text-primary);
+}
+
+/* Success/error messages - RPG notification style */
+[data-theme="pixel-anime"] .error-message {
+  background: #FFFFFF;
+  border: 3px solid var(--border);
+  color: var(--text-primary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #CCCCCC,
+    inset 2px 2px 0 #FFFFFF;
+  font-weight: 400;
+}
+
+[data-theme="pixel-anime"] .success-message {
+  background: var(--text-primary);
+  border: 3px solid var(--border);
+  color: #FFFFFF;
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+/* Login page specific styling */
+[data-theme="pixel-anime"] .login-container {
+  background:
+    linear-gradient(var(--bg-primary), var(--bg-primary)),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(0, 0, 0, 0.03) 10px,
+      rgba(0, 0, 0, 0.03) 20px
+    );
+}
+
+[data-theme="pixel-anime"] .login-card h1 {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 28px;
+  text-shadow: 3px 3px 0 #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .login-subtitle {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+}
+
+/* Main header - game HUD style */
+[data-theme="pixel-anime"] .main-header {
+  border-bottom: 4px solid var(--border);
+  background: var(--bg-secondary);
+  box-shadow: inset 0 -3px 0 #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .client-info h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 20px;
+}
+
+/* Empty state animation */
+[data-theme="pixel-anime"] .empty-icon {
+  animation: pixel-bob 1s infinite step-end;
+}
+
+@keyframes pixel-bob {
+  0%, 50% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  75% { transform: translateY(4px); }
+}
+
+/* === CONTRAST & INTERACTION FIXES FOR LIGHT THEME === */
+
+/* Fix 1: "Me" message bubbles - dark bg needs light text */
+[data-theme="pixel-anime"] .message.me .message-text {
+  color: #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .message.me .sender {
+  color: #CCCCCC;
+}
+
+[data-theme="pixel-anime"] .message.me .time {
+  color: #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .message.me .copy-btn {
+  color: #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .message.me .copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Fix 2: Active toggle buttons - RPG selection style */
+[data-theme="pixel-anime"] .toggle-btn.active {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border: 3px solid var(--border);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .toggle-btn.active:hover {
+  background: #3A3A3A;
+}
+
+/* Fix 3: Theme option active state */
+[data-theme="pixel-anime"] .theme-option.active {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #FFFFFF;
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+/* Fix 4: Already defined above in tone-chip section */
+
+/* Fix 5: Primary buttons in modals - dark with pixel styling */
+[data-theme="pixel-anime"] .modal .btn-primary {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border: 3px solid var(--border);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .modal .btn-primary:hover:not(:disabled) {
+  background: #3A3A3A;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--border);
+}
+
+/* Fix 6: Send button - prominent action button */
+[data-theme="pixel-anime"] .btn-send {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border: 3px solid var(--border);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .btn-send:hover:not(:disabled) {
+  background: #3A3A3A;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--border);
+}
+
+[data-theme="pixel-anime"] .btn-send:active:not(:disabled) {
+  background: #0A0A0A;
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Fix 7: AI button - secondary action */
+[data-theme="pixel-anime"] .btn-ai {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 3px solid var(--border);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #AAAAAA,
+    inset 2px 2px 0 #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .btn-ai:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--border);
+}
+
+/* Fix 8: Selected client item */
+[data-theme="pixel-anime"] .client-item.selected {
+  background: var(--text-primary);
+  color: #FFFFFF;
+  border-color: var(--text-primary);
+  box-shadow:
+    var(--shadow-sm),
+    inset -2px -2px 0 #000000,
+    inset 2px 2px 0 #4A4A4A;
+}
+
+[data-theme="pixel-anime"] .client-item.selected .client-name,
+[data-theme="pixel-anime"] .client-item.selected .client-notes {
+  color: #FFFFFF;
+}
+
+[data-theme="pixel-anime"] .client-item.selected .action-btn {
+  color: #AAAAAA;
+}
+
+[data-theme="pixel-anime"] .client-item.selected .action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Fix 9: Chip/quick reply buttons hover state */
+[data-theme="pixel-anime"] .chip::before {
+  background: var(--text-primary);
+}
+
+[data-theme="pixel-anime"] .chip:hover {
+  border-color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Fix 10: Add button hover */
+[data-theme="pixel-anime"] .add-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Fix 11: Voice button states */
+[data-theme="pixel-anime"] .voice-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Fix 12: Add response button */
+[data-theme="pixel-anime"] .add-response-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="pixel-anime"] * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

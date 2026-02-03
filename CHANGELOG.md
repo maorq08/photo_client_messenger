@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-02
+
+### Theme System & Pixel Anime Skin
+
+#### Added
+
+##### Theme Switching
+- New theme context for global theme state management
+- Theme preference persisted in localStorage
+- Theme toggle in Settings modal under "Appearance" section
+- Two themes available: Classic (default) and Pixel Anime
+
+##### Pixel Anime Theme
+- Light gray Game Boy-inspired color palette
+- VT323 pixel font from Google Fonts
+- RPG-style beveled 3D buttons with inset highlights
+- Chunky 3-4px borders on all UI elements
+- Hard offset drop shadows (no blur)
+- Press-down effect on button interactions
+- Dithered overlay on modal backgrounds
+- RPG dialog box styling for message bubbles
+- Game menu selection style for client list
+- Chunky scrollbars with 3D bevels
+- Uppercase text with letter-spacing throughout
+- Text shadows on headers
+
+### Files Added
+- `client/src/contexts/ThemeContext.tsx` - Theme state management
+- `client/src/themes.css` - Theme definitions and pixel-anime styles
+
+### Files Modified
+- `client/src/main.tsx` - Import themes.css
+- `client/src/index.css` - Moved CSS variables to themes.css
+- `client/src/App.tsx` - Wrapped with ThemeProvider
+- `client/src/components/SettingsModal.tsx` - Added theme toggle UI
+- `client/src/components/SettingsModal.css` - Theme toggle button styles
+
+---
+
 ## [0.2.0] - 2026-02-02
 
 ### Phase 2: Authentication, Database & Deployment Infrastructure

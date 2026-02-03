@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Settings, Client, Message, LimitErrorData } from './types';
 import { fetchSettings, fetchClients, fetchMessages, RateLimitError } from './api';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ClientList from './components/ClientList';
 import Conversation from './components/Conversation';
 import MessageInput from './components/MessageInput';
@@ -269,8 +270,10 @@ function AppWithAuth() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppWithAuth />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppWithAuth />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

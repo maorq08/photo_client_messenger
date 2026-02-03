@@ -60,6 +60,9 @@ Speak instead of type. Hands-free logging while you're reviewing photos or on th
 ### 📋 Copy to Clipboard
 One-click copy any message to paste directly into your messaging app of choice.
 
+### 🎨 Theme Support
+Switch between Classic dark theme and retro Pixel Anime theme (Game Boy-inspired).
+
 ### 📲 Mobile-Friendly PWA
 Install on your phone, tablet, or desktop. Works offline. Syncs seamlessly.
 
