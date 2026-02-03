@@ -132,6 +132,23 @@ npm run build
 npm start
 ```
 
+### Cloud Deployment (Railway)
+
+This app is configured for one-click deployment to [Railway](https://railway.app):
+
+1. **Create Railway account** and install CLI
+2. **Initialize project**: `railway init`
+3. **Add persistent volume** mounted at `/app/data` (for SQLite)
+4. **Set environment variables**:
+   ```
+   SESSION_SECRET=<64-char-random-string>
+   ANTHROPIC_API_KEY=sk-ant-...
+   GROQ_API_KEY=gsk_...
+   ```
+5. **Deploy**: `railway up` or connect GitHub for auto-deploy
+
+See `docs/adr/001-cloud-hosting.md` for architecture decisions.
+
 ---
 
 ## Usage Workflow
@@ -251,7 +268,9 @@ Love this project? We're open source and welcome contributions!
 - [x] AI response generation
 - [x] Voice input support
 - [x] Saved responses library
-- [ ] Cloud data sync
+- [x] User authentication
+- [x] SQLite database
+- [x] Cloud deployment (Railway)
 - [ ] Multi-language support
 - [ ] Custom AI model training
 - [ ] Team collaboration features

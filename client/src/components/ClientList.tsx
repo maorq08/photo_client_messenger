@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Client } from '../types';
-import { createClient, updateClient, deleteClient } from '../api';
+import type { Client, LimitErrorData } from '../types';
+import { createClient, updateClient, deleteClient, RateLimitError } from '../api';
 import './ClientList.css';
 
 interface Props {
@@ -8,9 +8,10 @@ interface Props {
   selectedClient: Client | null;
   onSelect: (client: Client) => void;
   onClientsUpdated: (clients: Client[]) => void;
+  onLimitError: (error: LimitErrorData) => void;
 }
 
-export default function ClientList({ clients, selectedClient, onSelect, onClientsUpdated }: Props) {
+export default function ClientList({ clients, selectedClient, onSelect, onClientsUpdated, onLimitError }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNotes, setNewNotes] = useState('');
@@ -20,19 +21,31 @@ export default function ClientList({ clients, selectedClient, onSelect, onClient
 
   async function handleAdd() {
     if (!newName.trim()) return;
-    const client = await createClient(newName.trim(), newNotes.trim());
-    onClientsUpdated([...clients, client]);
-    setNewName('');
-    setNewNotes('');
-    setShowAddForm(false);
-    onSelect(client);
+    try {
+      const client = await createClient(newName.trim(), newNotes.trim());
+      onClientsUpdated([...clients, client]);
+      setNewName('');
+      setNewNotes('');
+      setShowAddForm(false);
+      onSelect(client);
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        onLimitError(error.data);
+      }
+    }
   }
 
   async function handleUpdate(id: string) {
     if (!editName.trim()) return;
-    const updated = await updateClient(id, { name: editName.trim(), notes: editNotes.trim() });
-    onClientsUpdated(clients.map(c => c.id === id ? updated : c));
-    setEditingId(null);
+    try {
+      const updated = await updateClient(id, { name: editName.trim(), notes: editNotes.trim() });
+      onClientsUpdated(clients.map(c => c.id === id ? updated : c));
+      setEditingId(null);
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        onLimitError(error.data);
+      }
+    }
   }
 
   async function handleDelete(id: string) {

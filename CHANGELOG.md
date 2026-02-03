@@ -7,6 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-02
+
+### Phase 2: Authentication, Database & Deployment Infrastructure
+
+#### Added
+
+##### User Authentication System
+- Complete session-based authentication with secure cookies
+- User signup and login with email/password
+- Password hashing with bcrypt (10 rounds)
+- Session storage in SQLite database
+- Logout functionality with session destruction
+
+##### Password Management
+- Change password feature for logged-in users (requires current password verification)
+- Forgot password flow with email-based reset tokens
+- Password reset page with token validation
+- Secure token generation (32-byte random hex)
+- 1-hour token expiration for security
+- Email integration via Resend (optional, logs to console in dev)
+
+##### SQLite Database Migration
+- Migrated from JSON file storage to SQLite (better-sqlite3)
+- Schema for users, clients, messages, saved_responses, usage tracking
+- Foreign key constraints with cascade deletes
+- Indexed queries for performance
+- Password reset tokens table
+
+##### Usage Limits & Tiers
+- Three-tier system: Free, Paid, Power users
+- Monthly limits on AI features:
+  - AI Respond: 20/100/500 per month
+  - AI Improve: 30/150/750 per month
+  - Transcribe: 10/50/200 per month
+  - Clients: 5/25/unlimited
+- Visual limit modal with upgrade prompts
+- Automatic monthly reset
+
+##### Cloud Deployment Infrastructure
+- Multi-stage Dockerfile for production builds
+- Railway deployment configuration (railway.json)
+- Docker health checks
+- Non-root user for container security
+- Graceful shutdown handler (SIGTERM)
+- Trust proxy for secure cookies behind reverse proxy
+- Health check endpoint (`GET /health`)
+
+##### Backup System
+- SQLite backup script for Cloudflare R2
+- Uses SQLite's backup API for consistency
+- Ready for scheduled backups (cron-compatible)
+
+##### Architecture Decision Records
+- ADR-001: Cloud Hosting Selection (Railway)
+- ADR-002: SQLite Persistence Strategy
+
+#### Changed
+
+- Server now exports database instance for health checks
+- Session configuration updated for production (secure cookies, trust proxy)
+- Mobile-specific instructions hidden in production mode
+- .gitignore updated to exclude all database files
+
+#### Frontend Updates
+
+- Login page with signup/login/forgot password views
+- Reset password page with token handling from URL
+- Settings modal with "Security" section for password changes
+- Auth context for global user state management
+- Limit modal for usage warnings
+
+### Files Added
+
+- `server/auth.ts` - Authentication routes and middleware
+- `server/db.ts` - SQLite database setup and queries
+- `server/limits.ts` - Usage limit middleware and tier definitions
+- `server/types.ts` - TypeScript type definitions
+- `server/backup.ts` - R2 backup script (future use)
+- `client/src/contexts/AuthContext.tsx` - Auth state management
+- `client/src/pages/Login.tsx` - Login/signup/forgot password
+- `client/src/pages/ResetPassword.tsx` - Password reset page
+- `client/src/components/LimitModal.tsx` - Usage limit warnings
+- `Dockerfile` - Production container build
+- `.dockerignore` - Docker build exclusions
+- `railway.json` - Railway deployment config
+- `docs/adr/001-cloud-hosting.md` - Hosting decision record
+- `docs/adr/002-sqlite-persistence.md` - Database decision record
+
+### Environment Variables
+
+New optional variables for production:
+- `SESSION_SECRET` - Required for secure sessions
+- `RESEND_API_KEY` - For password reset emails
+- `EMAIL_FROM` - Sender address for reset emails
+- `APP_URL` - Base URL for reset links
+
+---
+
 ## [0.1.0] - 2026-02-02
 
 ### Phase 1: UI Improvements

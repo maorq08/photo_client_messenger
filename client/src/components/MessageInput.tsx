@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import type { Client, Settings, Message } from '../types';
-import { createMessage, generateResponse, improveMessage, checkAIStatus, transcribeAudio } from '../api';
+import type { Client, Settings, Message, LimitErrorData } from '../types';
+import { createMessage, generateResponse, improveMessage, checkAIStatus, transcribeAudio, RateLimitError } from '../api';
 import './MessageInput.css';
 
 interface Props {
   client: Client;
   settings: Settings | null;
   onMessageAdded: (message: Message) => void;
+  onLimitError: (error: LimitErrorData) => void;
 }
 
-export default function MessageInput({ client, settings, onMessageAdded }: Props) {
+export default function MessageInput({ client, settings, onMessageAdded, onLimitError }: Props) {
   const [messageText, setMessageText] = useState('');
   const [senderMode, setSenderMode] = useState<'client' | 'me'>('client');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,7 +134,10 @@ export default function MessageInput({ client, settings, onMessageAdded }: Props
               setMessageText(prev => prev ? prev + ' ' + transcript : transcript);
             }
           } catch (err) {
-            if (mountedRef.current) {
+            if (!mountedRef.current) return;
+            if (err instanceof RateLimitError) {
+              onLimitError(err.data);
+            } else {
               console.error('Transcription failed:', err);
               setAiError(err instanceof Error ? err.message : 'Failed to transcribe');
             }
@@ -175,7 +179,10 @@ export default function MessageInput({ client, settings, onMessageAdded }: Props
         setSenderMode('me');
       }
     } catch (err) {
-      if (mountedRef.current) {
+      if (!mountedRef.current) return;
+      if (err instanceof RateLimitError) {
+        onLimitError(err.data);
+      } else {
         setAiError(err instanceof Error ? err.message : 'Failed to add message');
       }
     } finally {
@@ -196,7 +203,10 @@ export default function MessageInput({ client, settings, onMessageAdded }: Props
           setMessageText(improved);
         }
       } catch (err) {
-        if (mountedRef.current) {
+        if (!mountedRef.current) return;
+        if (err instanceof RateLimitError) {
+          onLimitError(err.data);
+        } else {
           setAiError(err instanceof Error ? err.message : 'Failed to improve');
         }
       } finally {
@@ -213,7 +223,10 @@ export default function MessageInput({ client, settings, onMessageAdded }: Props
           setMessageText(response);
         }
       } catch (err) {
-        if (mountedRef.current) {
+        if (!mountedRef.current) return;
+        if (err instanceof RateLimitError) {
+          onLimitError(err.data);
+        } else {
           setAiError(err instanceof Error ? err.message : 'Failed to generate');
         }
       } finally {

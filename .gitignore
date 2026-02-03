@@ -1,8 +1,9 @@
 node_modules
 dist
 .env
+.env.*
 
 # Private data - never commit
-data/clients.json
-data/messages.json
-data/settings.json
+data/
+*.db
+*.db-journal

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Settings, SavedResponse } from '../types';
-import { updateSettings } from '../api';
+import { updateSettings, authChangePassword } from '../api';
 import './SettingsModal.css';
 
 interface Props {
@@ -17,6 +17,44 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>(settings.savedResponses);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Change password state
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordChanging, setPasswordChanging] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  async function handleChangePassword() {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters');
+      return;
+    }
+
+    setPasswordChanging(true);
+    try {
+      await authChangePassword(currentPassword, newPassword);
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowPasswordChange(false);
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Failed to change password');
+    } finally {
+      setPasswordChanging(false);
+    }
+  }
 
   const tonePresets = [
     { value: 'friendly and casual', label: 'Friendly & Casual' },
@@ -127,6 +165,77 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
                 className="tone-custom"
               />
             </div>
+          </section>
+
+          <section className="settings-section">
+            <h3>Security</h3>
+            {passwordSuccess && (
+              <div className="success-banner">Password changed successfully!</div>
+            )}
+            {!showPasswordChange ? (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setShowPasswordChange(true)}
+              >
+                Change Password
+              </button>
+            ) : (
+              <div className="password-change-form">
+                <div className="field">
+                  <label>Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                </div>
+                <div className="field">
+                  <label>New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="field">
+                  <label>Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </div>
+                {passwordError && <div className="field-error">{passwordError}</div>}
+                <div className="password-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowPasswordChange(false);
+                      setPasswordError(null);
+                      setCurrentPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleChangePassword}
+                    disabled={passwordChanging}
+                  >
+                    {passwordChanging ? 'Changing...' : 'Change Password'}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="settings-section">

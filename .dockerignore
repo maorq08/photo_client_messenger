@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+client/node_modules
+
+# Development files
+*.log
+.env
+.env.*
+
+# Data files (will be mounted as volume)
+data/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build artifacts (rebuilt in container)
+client/dist
+
+# Documentation
+docs/
+*.md
+
+# Tests
+**/*.test.ts
+**/*.spec.ts
+coverage/
