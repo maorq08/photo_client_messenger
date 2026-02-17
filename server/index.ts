@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import Groq from 'groq-sdk';
 import { initAI, isAIAvailable, generateResponse, improveMessage } from './ai';
+import { startTelegramBot } from './telegram';
 import { networkInterfaces } from 'os';
 
 import db, { users, savedResponses, clients, messages, usage } from './db';
@@ -400,6 +401,9 @@ function getLocalIP(): string {
   }
   return 'localhost';
 }
+
+// Start Telegram bot (no-op if TELEGRAM_BOT_TOKEN not set)
+startTelegramBot();
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
