@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-17
+
+### Telegram Bot Entry Point
+
+#### Added
+
+##### Telegram Bot
+- New `server/telegram.ts` module — long-polling Telegram bot runs alongside Express in the same process
+- Log client messages directly from Telegram: `@ClientName: their message`
+- `/respond` — generate an AI draft response for the active client
+- `/improve <draft>` — improve your own draft using AI
+- `/log` — save the last generated response as a sent message
+- `/clients` — list all your clients
+- `/help` — command reference
+- Bot auto-creates new clients when a name isn't found (subject to plan limits)
+- In-memory session tracks active client across commands
+- Unauthorized senders are rejected; only the configured chat ID can use the bot
+- Fresh user profile fetched on every AI call — profile changes take effect immediately without restart
+- Graceful no-op startup when `TELEGRAM_BOT_TOKEN` is not set (server always starts)
+
+##### AI Module Extraction
+- New `server/ai.ts` — shared `generateResponse` and `improveMessage` functions
+- Express routes and Telegram bot both use the same AI logic without duplication
+
+#### Environment Variables
+
+Three new optional variables (bot disabled if not set):
+- `TELEGRAM_BOT_TOKEN` — from @BotFather on Telegram
+- `TELEGRAM_CHAT_ID` — your numeric Telegram chat ID (bot rejects all other senders)
+- `TELEGRAM_USER_EMAIL` — your app account email (bot acts as this user)
+
+### Files Added
+- `server/ai.ts` — extracted AI helper functions
+- `server/telegram.ts` — Telegram bot module
+
+### Files Modified
+- `server/index.ts` — uses `server/ai.ts`; calls `startTelegramBot()` at startup
+- `.env.example` — documents the three new Telegram env vars
+- `package.json` — added `node-telegram-bot-api` dependency
+
+---
+
 ## [0.2.1] - 2026-02-02
 
 ### Theme System & Pixel Anime Skin

@@ -66,6 +66,9 @@ Switch between Classic dark theme and retro Pixel Anime theme (Game Boy-inspired
 ### 📲 Mobile-Friendly PWA
 Install on your phone, tablet, or desktop. Works offline. Syncs seamlessly.
 
+### 🤖 Telegram Bot Entry Point
+Log client messages and get AI responses directly from Telegram — no laptop needed. Send `@ClientName: their message`, then `/respond` to get a draft, `/improve` to refine it, and `/log` to save it. Works from anywhere via the deployed Railway server.
+
 ---
 
 ## Tech Stack
@@ -78,6 +81,8 @@ Install on your phone, tablet, or desktop. Works offline. Syncs seamlessly.
 | **AI/LLM** | Anthropic Claude API |
 | **Voice Transcription** | Groq Whisper |
 | **Progressive Web App** | vite-plugin-pwa |
+| **Telegram Bot** | node-telegram-bot-api |
+| **Hosting** | Railway |
 
 ---
 
@@ -150,13 +155,24 @@ This app is configured for one-click deployment to [Railway](https://railway.app
    ```
 5. **Deploy**: `railway up` or connect GitHub for auto-deploy
 
+#### Optional: Enable Telegram Bot
+
+Add three more env vars in the Railway dashboard:
+```
+TELEGRAM_BOT_TOKEN=<from @BotFather>
+TELEGRAM_CHAT_ID=<your numeric chat ID>
+TELEGRAM_USER_EMAIL=<your app login email>
+```
+
+See `.env.example` for setup instructions. The server starts normally if these are not set.
+
 See `docs/adr/001-cloud-hosting.md` for architecture decisions.
 
 ---
 
 ## Usage Workflow
 
-### The Typical Session
+### Web App Session
 
 1. **Paste a conversation** - Copy-paste from Instagram DMs, email, WhatsApp, wherever
 2. **Label the speakers** - Toggle "Client said / I said" (or let AI detect it)
@@ -164,6 +180,26 @@ See `docs/adr/001-cloud-hosting.md` for architecture decisions.
 4. **Pick one** - Or edit and refine before sending
 5. **Copy to clipboard** - Paste directly into your messaging app
 6. **Done** - Logged, saved, and ready for future reference
+
+### Telegram Bot (Phone-Friendly)
+
+Log messages and get AI drafts without opening the web app:
+
+```
+@Sarah: Hey I want to book a session next weekend
+→ Bot: Logged for Sarah ✓
+
+/respond
+→ Bot: Draft: Hey! I'd love to work with you! Here are my open dates...
+
+/improve I'm free Saturday the 22nd
+→ Bot: Improved: That sounds great! Saturday the 22nd works perfectly...
+
+/log
+→ Bot: Response logged as sent ✓
+```
+
+Commands: `@ClientName: msg` · `/respond` · `/improve <draft>` · `/log` · `/clients` · `/help`
 
 ---
 
@@ -179,7 +215,12 @@ photo_client_messenger/
 │   └── package.json
 ├── server/                 # Express.js backend
 │   ├── index.ts            # Server setup & routes
-│   └── package.json
+│   ├── ai.ts               # Shared AI helper functions
+│   ├── telegram.ts         # Telegram bot (long-polling)
+│   ├── auth.ts             # Authentication routes
+│   ├── db.ts               # SQLite database queries
+│   ├── limits.ts           # Usage limit middleware
+│   └── types.ts            # TypeScript type definitions
 ├── data/                   # Persisted conversation data
 ├── .env.example            # Environment variables template
 └── package.json            # Root package.json with scripts
@@ -274,6 +315,7 @@ Love this project? We're open source and welcome contributions!
 - [x] User authentication
 - [x] SQLite database
 - [x] Cloud deployment (Railway)
+- [x] Telegram bot entry point
 - [ ] Multi-language support
 - [ ] Custom AI model training
 - [ ] Team collaboration features
