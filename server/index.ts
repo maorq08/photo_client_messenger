@@ -6,8 +6,8 @@ import connectSqlite3 from 'connect-sqlite3';
 import { writeFileSync, unlinkSync, createReadStream } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import Anthropic from '@anthropic-ai/sdk';
 import Groq from 'groq-sdk';
+import { initAI, isAIAvailable, generateResponse, improveMessage } from './ai';
 import { networkInterfaces } from 'os';
 
 import db, { users, savedResponses, clients, messages, usage } from './db';
@@ -264,18 +264,17 @@ app.get('/api/usage', (req, res) => {
 });
 
 // AI endpoints
-const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
-const anthropic = hasApiKey ? new Anthropic() : null;
+initAI();
 
 const hasGroqKey = !!process.env.GROQ_API_KEY;
 const groq = hasGroqKey ? new Groq() : null;
 
 app.get('/api/ai/status', (_req, res) => {
-  res.json({ available: hasApiKey });
+  res.json({ available: isAIAvailable() });
 });
 
 app.post('/api/ai/respond', checkAILimit('aiRespond'), async (req, res) => {
-  if (!anthropic) {
+  if (!isAIAvailable()) {
     return res.status(503).json({
       error: 'AI features require ANTHROPIC_API_KEY environment variable',
       needsApiKey: true
@@ -288,46 +287,16 @@ app.post('/api/ai/respond', checkAILimit('aiRespond'), async (req, res) => {
     const { clientId, clientName } = req.body;
     const numericClientId = parseInt(clientId, 10);
 
-    // Verify client belongs to user
     const client = clients.findByIdAndUser(numericClientId, user.id);
     if (!client) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
     const clientMessages = messages.findByClient(numericClientId);
+    const responseText = await generateResponse(user, { ...client, name: clientName }, clientMessages);
 
-    const conversationHistory = clientMessages
-      .map(m => `${m.sender === 'client' ? clientName : user.name}: ${m.text}`)
-      .join('\n\n');
-
-    const tone = user.tone || 'friendly and casual';
-    const systemPrompt = `You are helping ${user.name}, a ${user.specialty}, write responses to clients.
-
-About ${user.name}: ${user.notes}
-
-${client.notes ? `About this client (${clientName}): ${client.notes}` : ''}
-
-IMPORTANT: Write in a ${tone} tone. Match this style throughout the response.
-
-The response should sound like it's coming from a real person who loves their work. Don't use corporate jargon.
-
-Just write the response text - no greeting prefix needed unless contextually appropriate.`;
-
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: `Here's my conversation history with ${clientName}:\n\n${conversationHistory}\n\nPlease write a friendly response to continue this conversation.`
-      }]
-    });
-
-    // Increment usage after successful response
     usage.incrementAiRespond(user.id);
-
-    const textContent = response.content.find(c => c.type === 'text');
-    res.json({ response: textContent?.text || '' });
+    res.json({ response: responseText });
   } catch (error) {
     console.error('AI respond error:', error);
     res.status(500).json({ error: 'Failed to generate response' });
@@ -335,7 +304,7 @@ Just write the response text - no greeting prefix needed unless contextually app
 });
 
 app.post('/api/ai/improve', checkAILimit('aiImprove'), async (req, res) => {
-  if (!anthropic) {
+  if (!isAIAvailable()) {
     return res.status(503).json({
       error: 'AI features require ANTHROPIC_API_KEY environment variable',
       needsApiKey: true
@@ -348,50 +317,16 @@ app.post('/api/ai/improve', checkAILimit('aiImprove'), async (req, res) => {
     const { draft, clientId, clientName } = req.body;
     const numericClientId = parseInt(clientId, 10);
 
-    // Verify client belongs to user
     const client = clients.findByIdAndUser(numericClientId, user.id);
     if (!client) {
       return res.status(404).json({ error: 'Client not found' });
     }
 
     const clientMessages = messages.findByClient(numericClientId);
+    const responseText = await improveMessage(user, { ...client, name: clientName }, clientMessages, draft);
 
-    const conversationHistory = clientMessages
-      .map(m => `${m.sender === 'client' ? clientName : user.name}: ${m.text}`)
-      .join('\n\n');
-
-    const tone = user.tone || 'friendly and casual';
-    const systemPrompt = `You are helping ${user.name}, a ${user.specialty}, improve their message.
-
-About ${user.name}: ${user.notes}
-
-${client.notes ? `About this client (${clientName}): ${client.notes}` : ''}
-
-IMPORTANT: The message should have a ${tone} tone.
-
-Take the draft message and make it:
-1. Match the ${tone} tone
-2. Sound natural and conversational
-3. Fix any awkward phrasing
-4. Keep the same meaning and intent
-
-Just return the improved message text, nothing else.`;
-
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: `Conversation history with ${clientName}:\n\n${conversationHistory}\n\nMy draft response:\n"${draft}"\n\nPlease improve this to sound more natural and friendly.`
-      }]
-    });
-
-    // Increment usage after successful response
     usage.incrementAiImprove(user.id);
-
-    const textContent = response.content.find(c => c.type === 'text');
-    res.json({ response: textContent?.text || '' });
+    res.json({ response: responseText });
   } catch (error) {
     console.error('AI improve error:', error);
     res.status(500).json({ error: 'Failed to improve message' });
@@ -473,7 +408,7 @@ const server = app.listen(PORT, () => {
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
   console.log(`Local:   http://localhost:${PORT}`);
   console.log(`Network: http://${localIP}:${PORT}`);
-  if (!hasApiKey) {
+  if (!isAIAvailable()) {
     console.log(`\n⚠️  AI features disabled - set ANTHROPIC_API_KEY to enable`);
   } else {
     console.log(`\n✅ AI features enabled`);
