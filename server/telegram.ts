@@ -56,9 +56,19 @@ export function startTelegramBot(): void {
 
   const bot = new TelegramBot(token, { polling: true });
 
+  bot.on('polling_error', (err) => {
+    console.error('Telegram polling error:', err.message);
+  });
+
+  function send(chatId: number, text: string): void {
+    bot.sendMessage(chatId, text).catch((err: Error) => {
+      console.error(`Failed to send Telegram message to ${chatId}:`, err.message);
+    });
+  }
+
   function guard(chatId: number): boolean {
     if (chatId !== allowedChatId) {
-      bot.sendMessage(chatId, 'Unauthorized.');
+      send(chatId, 'Unauthorized.');
       return false;
     }
     return true;
@@ -85,7 +95,7 @@ export function startTelegramBot(): void {
 
     const match = text.match(/^@([^:]+):\s*(.+)$/s);
     if (!match) {
-      bot.sendMessage(chatId, 'To log a client message use:\n@ClientName: their message\n\nOr type /help for all commands.');
+      send(chatId, 'To log a client message use:\n@ClientName: their message\n\nOr type /help for all commands.');
       return;
     }
 
@@ -98,7 +108,7 @@ export function startTelegramBot(): void {
     session.lastDraft = null;
 
     const prefix = isNew ? `Created new client: ${client.name}` : `Logged for ${client.name}`;
-    bot.sendMessage(chatId, `${prefix} ✓\n\nUse /respond to generate a reply, or /improve <your draft>`);
+    send(chatId, `${prefix} ✓\n\nUse /respond to generate a reply, or /improve <your draft>`);
   });
 
   bot.onText(/^\/respond$/, async (msg) => {
@@ -107,17 +117,17 @@ export function startTelegramBot(): void {
 
     const session = getSession(chatId);
     if (!session.activeClientId) {
-      bot.sendMessage(chatId, 'No active client. Send @ClientName: their message first.');
+      send(chatId, 'No active client. Send @ClientName: their message first.');
       return;
     }
     if (!isAIAvailable()) {
-      bot.sendMessage(chatId, 'AI unavailable — ANTHROPIC_API_KEY not set.');
+      send(chatId, 'AI unavailable — ANTHROPIC_API_KEY not set.');
       return;
     }
 
     const client = clients.findById(session.activeClientId);
     if (!client) {
-      bot.sendMessage(chatId, 'Active client not found. Send @ClientName: message to re-establish.');
+      send(chatId, 'Active client not found. Send @ClientName: message to re-establish.');
       return;
     }
 
@@ -126,9 +136,9 @@ export function startTelegramBot(): void {
       const clientMessages = messages.findByClient(client.id);
       const draft = await generateResponse(user, client, clientMessages);
       session.lastDraft = draft;
-      bot.sendMessage(chatId, `Draft:\n\n${draft}\n\n—\nUse /log to save as sent, or /improve <edited version>`);
+      send(chatId, `Draft:\n\n${draft}\n\n—\nUse /log to save as sent, or /improve <edited version>`);
     } catch {
-      bot.sendMessage(chatId, 'Failed to generate response. Try again.');
+      send(chatId, 'Failed to generate response. Try again.');
     }
   });
 
@@ -138,23 +148,23 @@ export function startTelegramBot(): void {
 
     const session = getSession(chatId);
     if (!session.activeClientId) {
-      bot.sendMessage(chatId, 'No active client. Send @ClientName: their message first.');
+      send(chatId, 'No active client. Send @ClientName: their message first.');
       return;
     }
     if (!isAIAvailable()) {
-      bot.sendMessage(chatId, 'AI unavailable — ANTHROPIC_API_KEY not set.');
+      send(chatId, 'AI unavailable — ANTHROPIC_API_KEY not set.');
       return;
     }
 
     const draft = match?.[1]?.trim();
     if (!draft) {
-      bot.sendMessage(chatId, 'Usage: /improve your draft text here');
+      send(chatId, 'Usage: /improve your draft text here');
       return;
     }
 
     const client = clients.findById(session.activeClientId);
     if (!client) {
-      bot.sendMessage(chatId, 'Active client not found.');
+      send(chatId, 'Active client not found.');
       return;
     }
 
@@ -163,9 +173,9 @@ export function startTelegramBot(): void {
       const clientMessages = messages.findByClient(client.id);
       const improved = await improveMessage(user, client, clientMessages, draft);
       session.lastDraft = improved;
-      bot.sendMessage(chatId, `Improved:\n\n${improved}\n\n—\nUse /log to save as sent`);
+      send(chatId, `Improved:\n\n${improved}\n\n—\nUse /log to save as sent`);
     } catch {
-      bot.sendMessage(chatId, 'Failed to improve message. Try again.');
+      send(chatId, 'Failed to improve message. Try again.');
     }
   });
 
@@ -175,13 +185,13 @@ export function startTelegramBot(): void {
 
     const session = getSession(chatId);
     if (!session.activeClientId || !session.lastDraft) {
-      bot.sendMessage(chatId, 'Nothing to log. Use /respond or /improve first.');
+      send(chatId, 'Nothing to log. Use /respond or /improve first.');
       return;
     }
 
     messages.create(session.activeClientId, 'me', session.lastDraft);
     session.lastDraft = null;
-    bot.sendMessage(chatId, 'Response logged as sent ✓');
+    send(chatId, 'Response logged as sent ✓');
   });
 
   bot.onText(/^\/clients$/, (msg) => {
@@ -190,18 +200,18 @@ export function startTelegramBot(): void {
 
     const userClients = clients.findByUser(user.id);
     if (userClients.length === 0) {
-      bot.sendMessage(chatId, 'No clients yet.\nStart with: @ClientName: their message');
+      send(chatId, 'No clients yet.\nStart with: @ClientName: their message');
       return;
     }
 
     const list = userClients.map((c, i) => `${i + 1}. ${c.name}`).join('\n');
-    bot.sendMessage(chatId, `Your clients:\n\n${list}`);
+    send(chatId, `Your clients:\n\n${list}`);
   });
 
   bot.onText(/^\/help$/, (msg) => {
     const chatId = msg.chat.id;
     if (!guard(chatId)) return;
-    bot.sendMessage(chatId, HELP_TEXT);
+    send(chatId, HELP_TEXT);
   });
 
   console.log('✅ Telegram bot started (polling)');
