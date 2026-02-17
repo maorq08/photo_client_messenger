@@ -26,12 +26,6 @@ COPY --from=builder /app/server ./server
 # Create data directory (volume mount point)
 RUN mkdir -p /app/data
 
-# Non-root user for security
-RUN addgroup -g 1001 appgroup && \
-    adduser -S -u 1001 -G appgroup appuser && \
-    chown -R appuser:appgroup /app
-USER appuser
-
 ENV NODE_ENV=production
 ENV PORT=3000
 
