@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { clients, messages, users } from './db';
 import { generateResponse, improveMessage, isAIAvailable } from './ai';
+import { PLAN_LIMITS } from './limits';
 import type { Client } from './types';
 
 interface BotSession {
@@ -27,6 +28,13 @@ export function findOrCreateClient(
   const match = userClients.find(c => c.name.toLowerCase() === normalized);
   if (match) return { client: match, isNew: false };
 
+  // Enforce client limit before creating
+  const user = users.findById(userId)!;
+  const limit = PLAN_LIMITS[user.plan].clients;
+  if (userClients.length >= limit) {
+    throw new Error(`Client limit reached (${limit} clients on ${user.plan} plan).`);
+  }
+
   const id = clients.create(userId, name.trim());
   return { client: clients.findById(id)!, isNew: true };
 }
@@ -47,12 +55,14 @@ export function startTelegramBot(): void {
   }
 
   const allowedChatId = parseInt(allowedChatIdRaw, 10);
-  const user = users.findByEmail(userEmail);
+  const startupUser = users.findByEmail(userEmail);
 
-  if (!user) {
+  if (!startupUser) {
     console.error(`⚠️  Telegram bot: no user found with email ${userEmail}`);
     return;
   }
+
+  const userId = startupUser.id;
 
   const bot = new TelegramBot(token, { polling: true });
 
@@ -100,7 +110,14 @@ export function startTelegramBot(): void {
     }
 
     const [, rawName, clientMessage] = match;
-    const { client, isNew } = findOrCreateClient(user.id, rawName.trim());
+    let client: Client;
+    let isNew: boolean;
+    try {
+      ({ client, isNew } = findOrCreateClient(userId, rawName.trim()));
+    } catch (err) {
+      send(chatId, err instanceof Error ? err.message : 'Failed to find or create client.');
+      return;
+    }
     messages.create(client.id, 'client', clientMessage.trim());
 
     const session = getSession(chatId);
@@ -133,6 +150,7 @@ export function startTelegramBot(): void {
 
     await bot.sendMessage(chatId, 'Generating...');
     try {
+      const user = users.findById(userId)!;
       const clientMessages = messages.findByClient(client.id);
       const draft = await generateResponse(user, client, clientMessages);
       session.lastDraft = draft;
@@ -170,6 +188,7 @@ export function startTelegramBot(): void {
 
     await bot.sendMessage(chatId, 'Improving...');
     try {
+      const user = users.findById(userId)!;
       const clientMessages = messages.findByClient(client.id);
       const improved = await improveMessage(user, client, clientMessages, draft);
       session.lastDraft = improved;
@@ -198,7 +217,7 @@ export function startTelegramBot(): void {
     const chatId = msg.chat.id;
     if (!guard(chatId)) return;
 
-    const userClients = clients.findByUser(user.id);
+    const userClients = clients.findByUser(userId);
     if (userClients.length === 0) {
       send(chatId, 'No clients yet.\nStart with: @ClientName: their message');
       return;
