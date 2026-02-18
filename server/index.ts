@@ -385,7 +385,8 @@ app.post('/api/ai/transcribe', checkAILimit('transcribe'), async (req, res) => {
     }
   } catch (error) {
     console.error('Transcription error:', error);
-    res.status(500).json({ error: 'Failed to transcribe audio' });
+    const message = error instanceof Error ? error.message : 'Failed to transcribe audio';
+    res.status(500).json({ error: message });
   }
 });
 

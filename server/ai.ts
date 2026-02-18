@@ -38,7 +38,7 @@ The response should sound like it's coming from a real person who loves their wo
 Just write the response text - no greeting prefix needed unless contextually appropriate.`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 500,
     system: systemPrompt,
     messages: [{
@@ -81,7 +81,7 @@ Take the draft message and make it:
 Just return the improved message text, nothing else.`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 500,
     system: systemPrompt,
     messages: [{

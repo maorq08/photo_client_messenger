@@ -274,9 +274,6 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
   }
 
   const data = await res.json();
-  if (data.needsApiKey) {
-    throw new Error('AI features require an API key. Set ANTHROPIC_API_KEY environment variable.');
-  }
   if (data.error) {
     throw new Error(data.error);
   }
