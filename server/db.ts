@@ -77,7 +77,25 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_messages_client ON messages(client_id);
   CREATE INDEX IF NOT EXISTS idx_usage_user_month ON usage(user_id, month);
   CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token);
+
+  CREATE TABLE IF NOT EXISTS telegram_link_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_telegram_link_tokens_token ON telegram_link_tokens(token);
 `);
+
+// Add telegram columns to users if not present (safe migration)
+try { db.exec(`ALTER TABLE users ADD COLUMN telegram_chat_id INTEGER`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN telegram_username TEXT`); } catch {}
+// Unique index on telegram_chat_id (partial — only when not null)
+try {
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram_chat_id ON users(telegram_chat_id) WHERE telegram_chat_id IS NOT NULL`);
+} catch {}
 
 // ============== User Queries ==============
 
@@ -102,6 +120,18 @@ const updateUserPassword = db.prepare<[string, number]>(`
   UPDATE users SET password_hash = ? WHERE id = ?
 `);
 
+const setUserTelegramChat = db.prepare<[number, string, number]>(`
+  UPDATE users SET telegram_chat_id = ?, telegram_username = ? WHERE id = ?
+`);
+
+const clearUserTelegramChat = db.prepare<[number]>(`
+  UPDATE users SET telegram_chat_id = NULL, telegram_username = NULL WHERE id = ?
+`);
+
+const getUserByTelegramChatId = db.prepare<[number], User>(`
+  SELECT * FROM users WHERE telegram_chat_id = ?
+`);
+
 export const users = {
   create(email: string, passwordHash: string, name = '', specialty = '', notes = '', tone = 'friendly and casual', plan: 'free' | 'paid' | 'power' = 'free'): number {
     const result = insertUser.run(email, passwordHash, name, specialty, notes, tone, plan);
@@ -122,6 +152,18 @@ export const users = {
 
   updatePassword(id: number, passwordHash: string): void {
     updateUserPassword.run(passwordHash, id);
+  },
+
+  setTelegramChat(id: number, chatId: number, username: string): void {
+    setUserTelegramChat.run(chatId, username, id);
+  },
+
+  clearTelegramChat(id: number): void {
+    clearUserTelegramChat.run(id);
+  },
+
+  findByTelegramChatId(chatId: number): User | undefined {
+    return getUserByTelegramChatId.get(chatId);
   },
 };
 
@@ -378,6 +420,52 @@ export const passwordResetTokens = {
 
   markUsed(token: string): void {
     markTokenUsed.run(token);
+  },
+};
+
+// ============== Telegram Link Token Queries ==============
+
+interface TelegramLinkToken {
+  id: number;
+  user_id: number;
+  token: string;
+  expires_at: string;
+  used: number;
+  created_at: string;
+}
+
+const insertTelegramLinkToken = db.prepare<[number, string, string]>(`
+  INSERT INTO telegram_link_tokens (user_id, token, expires_at) VALUES (?, ?, ?)
+`);
+
+const getTelegramLinkToken = db.prepare<[string], TelegramLinkToken>(`
+  SELECT * FROM telegram_link_tokens WHERE token = ? AND used = 0
+`);
+
+const markTelegramLinkTokenUsed = db.prepare<[string]>(`
+  UPDATE telegram_link_tokens SET used = 1 WHERE token = ?
+`);
+
+const deleteExpiredTelegramTokens = db.prepare(`
+  DELETE FROM telegram_link_tokens WHERE expires_at < datetime('now') OR used = 1
+`);
+
+export const telegramLinkTokens = {
+  create(userId: number, token: string, expiresAt: Date): void {
+    deleteExpiredTelegramTokens.run();
+    insertTelegramLinkToken.run(userId, token, expiresAt.toISOString());
+  },
+
+  findByToken(token: string): TelegramLinkToken | undefined {
+    const result = getTelegramLinkToken.get(token);
+    if (result && new Date(result.expires_at) < new Date()) {
+      return undefined;
+    }
+    return result;
+  },
+
+  markUsed(token: string): void {
+    markTelegramLinkTokenUsed.run(token);
   },
 };
 
