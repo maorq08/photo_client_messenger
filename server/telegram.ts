@@ -39,6 +39,12 @@ export function findOrCreateClient(
   return { client: clients.findById(id)!, isNew: true };
 }
 
+let _botUsername: string | null = null;
+
+export function getBotUsername(): string | null {
+  return _botUsername;
+}
+
 export function startTelegramBot(): void {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const allowedChatIdRaw = process.env.TELEGRAM_CHAT_ID;
@@ -65,6 +71,13 @@ export function startTelegramBot(): void {
   const userId = startupUser.id;
 
   const bot = new TelegramBot(token, { polling: true });
+
+  // Resolve and cache the bot's own username
+  bot.getMe().then((me) => {
+    _botUsername = me.username ?? null;
+  }).catch(() => {
+    // Non-fatal; username will remain null
+  });
 
   bot.on('polling_error', (err) => {
     console.error('Telegram polling error:', err.message);

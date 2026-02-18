@@ -4,14 +4,15 @@ import cors from 'cors';
 import session from 'express-session';
 import connectSqlite3 from 'connect-sqlite3';
 import { writeFileSync, unlinkSync, createReadStream } from 'fs';
+import { randomBytes } from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import Groq from 'groq-sdk';
 import { initAI, isAIAvailable, generateResponse, improveMessage } from './ai';
-import { startTelegramBot } from './telegram';
+import { startTelegramBot, getBotUsername } from './telegram';
 import { networkInterfaces } from 'os';
 
-import db, { users, savedResponses, clients, messages, usage } from './db';
+import db, { users, savedResponses, clients, messages, usage, telegramLinkTokens } from './db';
 import authRouter, { requireAuth } from './auth';
 import { PLAN_LIMITS, checkClientLimit, checkMessageLimit, checkAILimit } from './limits';
 import type { User } from './types';
@@ -86,6 +87,7 @@ app.get('/api/settings', (req, res) => {
     specialty: user.specialty,
     notes: user.notes,
     tone: user.tone,
+    telegram_username: user.telegram_username ?? null,
     savedResponses: responses.map(r => ({
       id: String(r.id),
       trigger: r.trigger,
@@ -120,6 +122,7 @@ app.put('/api/settings', (req, res) => {
     specialty: updatedUser.specialty,
     notes: updatedUser.notes,
     tone: updatedUser.tone,
+    telegram_username: updatedUser.telegram_username ?? null,
     savedResponses: responses.map(r => ({
       id: String(r.id),
       trigger: r.trigger,
@@ -127,6 +130,28 @@ app.put('/api/settings', (req, res) => {
       text: r.text,
     })),
   });
+});
+
+// Telegram integration endpoints
+app.post('/api/telegram/connect', async (req, res) => {
+  const user = req.user as User;
+  const botUsername = getBotUsername();
+
+  if (!botUsername) {
+    return res.status(503).json({ error: 'Telegram bot not configured. Set TELEGRAM_BOT_TOKEN.' });
+  }
+
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+  telegramLinkTokens.create(user.id, token, expiresAt);
+
+  res.json({ url: `https://t.me/${botUsername}?start=${token}` });
+});
+
+app.delete('/api/telegram/disconnect', (req, res) => {
+  const user = req.user as User;
+  users.clearTelegramChat(user.id);
+  res.json({ success: true });
 });
 
 // Clients endpoints
