@@ -285,6 +285,7 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
 export async function connectTelegram(): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/telegram/connect`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
   });
   return handleResponse(res);

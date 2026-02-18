@@ -123,7 +123,7 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
         notes,
         tone,
         savedResponses: savedResponses.filter(sr => sr.title.trim() && sr.text.trim()),
-        telegram_username: telegramUsername
+        telegram_username: null
       });
       onSave(updated);
     } catch (err) {

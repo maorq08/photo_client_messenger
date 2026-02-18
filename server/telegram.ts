@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { clients, messages, users, telegramLinkTokens } from './db';
+import db, { clients, messages, users, telegramLinkTokens } from './db';
 import { generateResponse, improveMessage, isAIAvailable } from './ai';
 import { PLAN_LIMITS } from './limits';
 import type { Client } from './types';
@@ -26,7 +26,7 @@ export function getBotUsername(): string | null {
   return _botUsername;
 }
 
-export function findOrCreateClient(
+function findOrCreateClient(
   userId: number,
   name: string
 ): { client: Client; isNew: boolean } {
@@ -114,10 +114,11 @@ export function startTelegramBot(): void {
       return;
     }
 
-    telegramLinkTokens.markUsed(token);
-
     const username = msg.from?.username ?? msg.from?.first_name ?? 'unknown';
-    users.setTelegramChat(linkToken.user_id, chatId, username);
+    db.transaction(() => {
+      telegramLinkTokens.markUsed(token);
+      users.setTelegramChat(linkToken.user_id, chatId, username);
+    })();
 
     const user = users.findById(linkToken.user_id);
     send(chatId, `✅ Connected! Hi ${user?.name || 'there'}, you can now use this bot to manage your clients.\n\n${HELP_TEXT}`);
@@ -262,8 +263,6 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/help$/, (msg) => {
     const chatId = msg.chat.id;
-    const user = requireLinkedUser(chatId);
-    if (!user) return;
     send(chatId, HELP_TEXT);
   });
 }
