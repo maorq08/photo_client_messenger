@@ -10,6 +10,8 @@ export interface User {
   tone: string;
   plan: 'free' | 'paid' | 'power';
   created_at: string;
+  telegram_chat_id: number | null;
+  telegram_username: string | null;
 }
 
 export interface SavedResponse {
@@ -62,6 +64,7 @@ export interface SettingsResponse {
   specialty: string;
   notes: string;
   tone: string;
+  telegram_username: string | null;
   savedResponses: Array<{
     id: string;
     trigger: string;
