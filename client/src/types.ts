@@ -3,6 +3,7 @@ export interface Settings {
   specialty: string;
   notes: string;
   tone?: string;
+  telegram_username: string | null;
   savedResponses: SavedResponse[];
 }
 

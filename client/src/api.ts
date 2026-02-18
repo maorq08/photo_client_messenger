@@ -279,3 +279,21 @@ export async function transcribeAudio(audioBase64: string, mimeType: string): Pr
   }
   return data.transcript;
 }
+
+// Telegram API
+
+export async function connectTelegram(): Promise<{ url: string }> {
+  const res = await fetch(`${API_BASE}/telegram/connect`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  return handleResponse(res);
+}
+
+export async function disconnectTelegram(): Promise<void> {
+  const res = await fetch(`${API_BASE}/telegram/disconnect`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  return handleResponse(res);
+}
