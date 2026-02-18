@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { clients, messages, users } from './db';
+import { clients, messages, users, telegramLinkTokens } from './db';
 import { generateResponse, improveMessage, isAIAvailable } from './ai';
 import { PLAN_LIMITS } from './limits';
 import type { Client } from './types';
@@ -19,6 +19,13 @@ function getSession(chatId: number): BotSession {
   return sessions.get(chatId)!;
 }
 
+// Bot username — resolved after bot starts
+let _botUsername: string | null = null;
+
+export function getBotUsername(): string | null {
+  return _botUsername;
+}
+
 export function findOrCreateClient(
   userId: number,
   name: string
@@ -28,7 +35,6 @@ export function findOrCreateClient(
   const match = userClients.find(c => c.name.toLowerCase() === normalized);
   if (match) return { client: match, isNew: false };
 
-  // Enforce client limit before creating
   const user = users.findById(userId)!;
   const limit = PLAN_LIMITS[user.plan].clients;
   if (userClients.length >= limit) {
@@ -39,44 +45,22 @@ export function findOrCreateClient(
   return { client: clients.findById(id)!, isNew: true };
 }
 
-let _botUsername: string | null = null;
-
-export function getBotUsername(): string | null {
-  return _botUsername;
-}
-
 export function startTelegramBot(): void {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const allowedChatIdRaw = process.env.TELEGRAM_CHAT_ID;
-  const userEmail = process.env.TELEGRAM_USER_EMAIL;
 
   if (!token) {
     console.log('ℹ️  Telegram bot disabled — set TELEGRAM_BOT_TOKEN to enable');
     return;
   }
 
-  if (!allowedChatIdRaw || !userEmail) {
-    console.log('⚠️  Telegram bot requires TELEGRAM_CHAT_ID and TELEGRAM_USER_EMAIL');
-    return;
-  }
-
-  const allowedChatId = parseInt(allowedChatIdRaw, 10);
-  const startupUser = users.findByEmail(userEmail);
-
-  if (!startupUser) {
-    console.error(`⚠️  Telegram bot: no user found with email ${userEmail}`);
-    return;
-  }
-
-  const userId = startupUser.id;
-
   const bot = new TelegramBot(token, { polling: true });
 
-  // Resolve and cache the bot's own username
-  bot.getMe().then((me) => {
+  // Resolve and store the bot username on startup
+  bot.getMe().then(me => {
     _botUsername = me.username ?? null;
-  }).catch(() => {
-    // Non-fatal; username will remain null
+    console.log(`✅ Telegram bot started (@${_botUsername}, polling)`);
+  }).catch(err => {
+    console.error('Telegram bot failed to get username:', err.message);
   });
 
   bot.on('polling_error', (err) => {
@@ -89,12 +73,13 @@ export function startTelegramBot(): void {
     });
   }
 
-  function guard(chatId: number): boolean {
-    if (chatId !== allowedChatId) {
-      send(chatId, 'Unauthorized.');
-      return false;
+  // Helper: look up the app user by chat ID, send error if not linked
+  function requireLinkedUser(chatId: number): ReturnType<typeof users.findByTelegramChatId> {
+    const user = users.findByTelegramChatId(chatId);
+    if (!user) {
+      send(chatId, '⚠️ Your Telegram is not connected to an account.\n\nGo to Settings → Connect Telegram in the app to link your account.');
     }
-    return true;
+    return user;
   }
 
   const HELP_TEXT = [
@@ -108,13 +93,44 @@ export function startTelegramBot(): void {
     '/help — Show this help',
   ].join('\n');
 
-  // Handle @ClientName: message
+  // /start <token> — link Telegram account to app user
+  bot.onText(/^\/start(?: (.+))?$/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const token = match?.[1]?.trim();
+
+    if (!token) {
+      const existingUser = users.findByTelegramChatId(chatId);
+      if (existingUser) {
+        send(chatId, `✅ Already connected as ${existingUser.name}.\n\n${HELP_TEXT}`);
+      } else {
+        send(chatId, 'Welcome! To connect your account, go to Settings → Connect Telegram in the app and tap the link.');
+      }
+      return;
+    }
+
+    const linkToken = telegramLinkTokens.findByToken(token);
+    if (!linkToken) {
+      send(chatId, '❌ This link has expired or is invalid. Go to Settings → Connect Telegram to generate a new one.');
+      return;
+    }
+
+    telegramLinkTokens.markUsed(token);
+
+    const username = msg.from?.username ?? msg.from?.first_name ?? 'unknown';
+    users.setTelegramChat(linkToken.user_id, chatId, username);
+
+    const user = users.findById(linkToken.user_id);
+    send(chatId, `✅ Connected! Hi ${user?.name || 'there'}, you can now use this bot to manage your clients.\n\n${HELP_TEXT}`);
+  });
+
+  // @ClientName: message — log client message
   bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
-
     const text = msg.text?.trim();
     if (!text || text.startsWith('/')) return;
+
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
 
     const match = text.match(/^@([^:]+):\s*(.+)$/s);
     if (!match) {
@@ -126,7 +142,7 @@ export function startTelegramBot(): void {
     let client: Client;
     let isNew: boolean;
     try {
-      ({ client, isNew } = findOrCreateClient(userId, rawName.trim()));
+      ({ client, isNew } = findOrCreateClient(user.id, rawName.trim()));
     } catch (err) {
       send(chatId, err instanceof Error ? err.message : 'Failed to find or create client.');
       return;
@@ -143,7 +159,8 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/respond$/, async (msg) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
 
     const session = getSession(chatId);
     if (!session.activeClientId) {
@@ -163,9 +180,9 @@ export function startTelegramBot(): void {
 
     await bot.sendMessage(chatId, 'Generating...');
     try {
-      const user = users.findById(userId)!;
+      const freshUser = users.findById(user.id)!;
       const clientMessages = messages.findByClient(client.id);
-      const draft = await generateResponse(user, client, clientMessages);
+      const draft = await generateResponse(freshUser, client, clientMessages);
       session.lastDraft = draft;
       send(chatId, `Draft:\n\n${draft}\n\n—\nUse /log to save as sent, or /improve <edited version>`);
     } catch {
@@ -175,7 +192,8 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/improve (.+)$/s, async (msg, match) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
 
     const session = getSession(chatId);
     if (!session.activeClientId) {
@@ -201,9 +219,9 @@ export function startTelegramBot(): void {
 
     await bot.sendMessage(chatId, 'Improving...');
     try {
-      const user = users.findById(userId)!;
+      const freshUser = users.findById(user.id)!;
       const clientMessages = messages.findByClient(client.id);
-      const improved = await improveMessage(user, client, clientMessages, draft);
+      const improved = await improveMessage(freshUser, client, clientMessages, draft);
       session.lastDraft = improved;
       send(chatId, `Improved:\n\n${improved}\n\n—\nUse /log to save as sent`);
     } catch {
@@ -213,7 +231,8 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/log$/, (msg) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
 
     const session = getSession(chatId);
     if (!session.activeClientId || !session.lastDraft) {
@@ -228,9 +247,10 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/clients$/, (msg) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
 
-    const userClients = clients.findByUser(userId);
+    const userClients = clients.findByUser(user.id);
     if (userClients.length === 0) {
       send(chatId, 'No clients yet.\nStart with: @ClientName: their message');
       return;
@@ -242,9 +262,8 @@ export function startTelegramBot(): void {
 
   bot.onText(/^\/help$/, (msg) => {
     const chatId = msg.chat.id;
-    if (!guard(chatId)) return;
+    const user = requireLinkedUser(chatId);
+    if (!user) return;
     send(chatId, HELP_TEXT);
   });
-
-  console.log('✅ Telegram bot started (polling)');
 }
