@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Settings, SavedResponse } from '../types';
-import { updateSettings, authChangePassword } from '../api';
+import { updateSettings, authChangePassword, connectTelegram, disconnectTelegram } from '../api';
 import { useTheme } from '../contexts/ThemeContext';
 import './SettingsModal.css';
 
@@ -31,6 +31,12 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  // Telegram state
+  const [telegramUsername, setTelegramUsername] = useState<string | null>(settings.telegram_username ?? null);
+  const [telegramConnecting, setTelegramConnecting] = useState(false);
+  const [telegramError, setTelegramError] = useState<string | null>(null);
+  const [telegramLinkSent, setTelegramLinkSent] = useState(false);
+
   async function handleChangePassword() {
     setPasswordError(null);
     setPasswordSuccess(false);
@@ -60,6 +66,45 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
     }
   }
 
+  async function handleConnectTelegram() {
+    setTelegramError(null);
+    setTelegramConnecting(true);
+    setTelegramLinkSent(false);
+    try {
+      const { url } = await connectTelegram();
+      window.open(url, '_blank');
+      setTelegramLinkSent(true);
+    } catch (err) {
+      setTelegramError(err instanceof Error ? err.message : 'Failed to generate link');
+    } finally {
+      setTelegramConnecting(false);
+    }
+  }
+
+  async function handleDisconnectTelegram() {
+    setTelegramError(null);
+    try {
+      await disconnectTelegram();
+      setTelegramUsername(null);
+      setTelegramLinkSent(false);
+    } catch (err) {
+      setTelegramError(err instanceof Error ? err.message : 'Failed to disconnect');
+    }
+  }
+
+  async function handleCheckTelegramStatus() {
+    try {
+      const { fetchSettings } = await import('../api');
+      const updated = await fetchSettings();
+      setTelegramUsername(updated.telegram_username ?? null);
+      if (updated.telegram_username) {
+        setTelegramLinkSent(false);
+      }
+    } catch {
+      // silently ignore
+    }
+  }
+
   const tonePresets = [
     { value: 'friendly and casual', label: 'Friendly & Casual' },
     { value: 'warm and professional', label: 'Warm & Professional' },
@@ -77,7 +122,8 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
         specialty,
         notes,
         tone,
-        savedResponses: savedResponses.filter(sr => sr.title.trim() && sr.text.trim())
+        savedResponses: savedResponses.filter(sr => sr.title.trim() && sr.text.trim()),
+        telegram_username: telegramUsername
       });
       onSave(updated);
     } catch (err) {
@@ -259,6 +305,51 @@ export default function SettingsModal({ settings, onClose, onSave }: Props) {
                     {passwordChanging ? 'Changing...' : 'Change Password'}
                   </button>
                 </div>
+              </div>
+            )}
+          </section>
+
+          <section className="settings-section">
+            <h3>Telegram</h3>
+            <p className="section-hint">Log client messages and get AI drafts from Telegram</p>
+
+            {telegramError && <div className="field-error">{telegramError}</div>}
+
+            {telegramUsername ? (
+              <div>
+                <p style={{ marginBottom: '8px' }}>✅ Connected as @{telegramUsername}</p>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleDisconnectTelegram}
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleConnectTelegram}
+                  disabled={telegramConnecting}
+                >
+                  {telegramConnecting ? 'Generating link...' : 'Connect Telegram'}
+                </button>
+
+                {telegramLinkSent && (
+                  <div style={{ marginTop: '8px' }}>
+                    <p className="section-hint">Tap the link that opened in Telegram to complete setup.</p>
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      style={{ marginTop: '6px' }}
+                      onClick={handleCheckTelegramStatus}
+                    >
+                      I connected — refresh status
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </section>
